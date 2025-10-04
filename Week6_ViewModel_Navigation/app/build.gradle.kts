@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.jetpackcomposebasicsdemo"
+    namespace = "com.example.myapplication"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.jetpackcomposebasicsdemo"
-        minSdk = 23
+        applicationId = "com.example.myapplication"
+        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
