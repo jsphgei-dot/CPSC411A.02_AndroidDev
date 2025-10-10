@@ -44,6 +44,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.example.jetpackcomposebasicsdemo.assignment1solution.ToDo
 import com.example.jetpackcomposebasicsdemo.navigation.ShoppingApp
+import com.example.jetpackcomposebasicsdemo.navigation2.CourseApp
 import com.example.jetpackcomposebasicsdemo.viewmodel.CountScreen
 
 class MainActivity : ComponentActivity() {
@@ -56,8 +57,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 //                    Screen(modifier = Modifier.padding(innerPadding))
 //                     ModDemo(modifier = Modifier.padding(innerPadding))
-
-                    MyShop(modifier = Modifier.padding(innerPadding))
+                        MyCourseApp(modifier = Modifier.padding(innerPadding))
+//                    MyShop(modifier = Modifier.padding(innerPadding))
 //                    CounterScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
@@ -211,6 +212,16 @@ fun MyShop(modifier: Modifier = Modifier) {
         ShoppingApp()
     }
 
+}
+
+
+// ******************************************************
+// navigation part 2 demo
+@Composable
+fun MyCourseApp(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        CourseApp()
+    }
 }
 
 
