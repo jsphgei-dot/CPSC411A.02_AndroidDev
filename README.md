@@ -3,4 +3,4 @@ Repo to track progress on the midterm project
 
 
 ## Screenshots
-<img src="screenshots/screenshot_1.png" alt="Project Sketch" width=200 height=400>
+<img src="screenshots/screenshot_1.jpg" alt="Project Sketch" width=200 height=400>
