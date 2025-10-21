@@ -31,8 +31,18 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavHost
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.remember
+import androidx.navigation.navigation
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.example.todotask.ui.theme.TodoTaskTheme
 import kotlinx.parcelize.Parcelize
+
 
 // =================================================================================
 // 1. Data Model
@@ -57,26 +67,58 @@ data class TodoItem(
 // =================================================================================
 // 2. Main Activity
 // =================================================================================
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            TodoTaskTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    TodoScreen()
+@Composable
+fun MovieApp() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "mainFlow"
+    ) {
+        // wip figuring how to pass an identifier for the movie when we navigate to details
+        //composable("movieDetails/{movieIndex}") { backStackEntry ->
+        //    val movieId = backStackEntry.arguments?.getString("movieName") ?: return@composable
+        //    DetailsScreen(movieName)
+        //}
+
+
+
+        navigation(startDestination = "home", "mainFlow"){
+            composable("home") { backStackEntry ->
+                val mainFlowEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("mainFlow")
                 }
+
+                val movieViewModel: MovieViewModel = viewModel(mainFlowEntry)
+
+
+                HomeScreen(navController, movieViewModel)
             }
+
+            composable("watchList") {backStackEntry ->
+                val mainFlowEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("mainFlow")
+                }
+                val movieViewModel: MovieViewModel = viewModel(mainFlowEntry)
+
+
+                WatchListScreen(navController, movieViewModel)
+            }
+
         }
+
     }
+
 }
+
+
 
 // =================================================================================
 // 3. Stateful Parent Composable (View Logic)
 // =================================================================================
-@Composable
+//@Composable
+
+/*      i think we dont need this anymore - chris
 fun TodoScreen() {
     // Context for showing Toast messages
     val context = LocalContext.current
@@ -85,61 +127,6 @@ fun TodoScreen() {
     // `rememberSaveable` ensures it survives configuration changes (e.g., rotation).
     var text by rememberSaveable { mutableStateOf("") }
 
-    // State for the list of all To-Do items.
-    // `rememberSaveable` with a custom `listSaver` is used to persist our custom TodoItem list.
-    val items = rememberSaveable(
-        saver = listSaver(
-            save = { stateList ->
-                // Don't save if it's not a mutable state list
-                if (stateList.isNotEmpty()) {
-                    val list = stateList.toList()
-                    // Convert each item to a list of its properties
-                    list.map { listOf(it.id, it.label, it.isCompleted) }
-                } else {
-                    emptyList()
-                }
-            },
-            restore = { list ->
-                // Restore the list from the saved properties
-                list.map {
-                    TodoItem(
-                        id = it[0] as Int,
-                        label = it[1] as String,
-                        isCompleted = it[2] as Boolean
-                    )
-                }.toMutableStateList()
-            }
-        )
-    ) {
-        // Initial list is empty
-        mutableStateListOf<TodoItem>()
-    }
-
-
-    // --- Event Handlers (Unidirectional Data Flow) ---
-
-    val onAddItem = {
-        val trimmedText = text.trim()
-        if (trimmedText.isBlank()) {
-            Toast.makeText(context, "Task name cannot be empty.", Toast.LENGTH_SHORT).show()
-        } else {
-            // Generate a unique ID (simple approach for this example)
-            val newId = (items.maxOfOrNull { it.id } ?: 0) + 1
-            items.add(TodoItem(id = newId, label = trimmedText))
-            text = "" // Clear the input field
-        }
-    }
-
-    val onItemCheckedChange: (TodoItem, Boolean) -> Unit = { item, isChecked ->
-        val index = items.indexOf(item)
-        if (index != -1) {
-            items[index] = item.copy(isCompleted = isChecked)
-        }
-    }
-
-    val onItemDeleted: (TodoItem) -> Unit = { item ->
-        items.remove(item)
-    }
 
     val toHome: () -> Unit = {}
 
@@ -150,9 +137,9 @@ fun TodoScreen() {
     // --- UI Layout ---
 
     Column(modifier = Modifier.padding(16.dp)) {
-        MovieList(
-            title:
-        )
+        //MovieList(
+            //title:
+        //)
         Spacer(modifier = Modifier.weight(1f))
         BottomBar(
             toHome = toHome,
@@ -161,7 +148,7 @@ fun TodoScreen() {
         )
     }
 }
-
+*/
 // =================================================================================
 // 4. Stateless Child Composables (UI Components)
 // =================================================================================
@@ -181,7 +168,8 @@ fun MovieListSection(
     items: List<TodoItem>,
     onItemCheckedChange: (TodoItem, Boolean) -> Unit,
     onItemDeleted: (TodoItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    movieViewModel: MovieViewModel
 ) {
     Column(modifier = modifier) {
 
@@ -197,6 +185,62 @@ fun MovieListSection(
             }
 
     }
+}
+
+@Composable
+fun HomeScreen(             // the home screen of the app
+    navController: NavController,
+    movieViewModel: MovieViewModel,
+) {
+
+    BottomBar(navController)    // creates the navigation bar bar
+
+
+    // content
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("you are on the home screen")
+
+
+    }
+
+}
+
+@Composable
+fun WatchListScreen(                        // Watchlist screen, same as homescreen just with the viewmodel filtered
+    navController: NavController,         // to elements with the onWatchList attribute set to true
+    movieViewModel: MovieViewModel
+) {
+
+    BottomBar(navController)    // creates the navigation bar bar
+
+
+    // content
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("you are on the watchlist screen")
+
+
+    }
+
+}
+
+@Composable
+fun DetailsScreen(
+    navController: NavController,
+    movieViewModel: MovieViewModel
+) {
+
 }
 
 /**
@@ -268,11 +312,9 @@ fun OutlinedImageTilePreview() {
     }
 }
 
-@Composable
+@Composable         // creates the bottom bar of buttons for navigating the app
 fun BottomBar(
-    toHome: () -> Unit,
-    toWatchlist: () -> Unit,
-    back: () -> Unit,
+    navController: NavController
 ) {
     Row(
         modifier = Modifier
@@ -280,7 +322,7 @@ fun BottomBar(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = toHome) {
+        IconButton(onClick = { navController.popBackStack("home", inclusive = false) }) { // use pop backstack since home is the start page
             Icon(
                 imageVector = Icons.Default.Home,
                 contentDescription = "Go Home"
@@ -288,7 +330,7 @@ fun BottomBar(
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(
-            onClick = toWatchlist,
+            onClick = { navController.navigate("watchList") },
             modifier = Modifier
         ) {
             Icon(
@@ -297,7 +339,7 @@ fun BottomBar(
             )
         }
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = back) {
+        IconButton(onClick = { navController.popBackStack() }) {        // go back 1 page in the stack
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Go Back"
@@ -309,10 +351,11 @@ fun BottomBar(
 // =================================================================================
 // 5. Preview
 // =================================================================================
+/*
 @Preview(showBackground = true)
 @Composable
 fun TodoScreenPreview() {
     TodoTaskTheme {
         TodoScreen()
     }
-}
+}*/
