@@ -2,6 +2,7 @@ package com.example.todotask
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,6 +41,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.remember
 import androidx.navigation.navigation
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.clickable
 
 import com.example.todotask.ui.theme.TodoTaskTheme
 import kotlinx.parcelize.Parcelize
@@ -88,11 +93,21 @@ fun MovieApp() {
         navController = navController,
         startDestination = "mainFlow"
     ) {
-        // wip figuring how to pass an identifier for the movie when we navigate to details
-        //composable("movieDetails/{movieIndex}") { backStackEntry ->
-        //    val movieId = backStackEntry.arguments?.getString("movieName") ?: return@composable
-        //    DetailsScreen(movieName)
-        //}
+
+        composable("movieDetails/{movieID}") { backStackEntry ->
+            val mainFlowEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("mainFlow")
+            }
+            val movieIndex = backStackEntry.arguments?.getString("movieID")?.toIntOrNull()
+            val movieViewModel: MovieViewModel = viewModel(mainFlowEntry)
+
+            if (movieIndex != null) {
+                DetailsScreen(navController, movieViewModel, movieIndex)
+            } else {
+                // toast an error maybe
+            }
+
+        }
 
 
 
@@ -174,7 +189,7 @@ fun TodoScreen() {
 
 /**
  * A stateless composable that displays a section header and a list of To-Do items.
- */
+
 @Composable
 fun MovieListSection(
     title: String,
@@ -198,7 +213,7 @@ fun MovieListSection(
             }
 
     }
-}
+}*/
 
 @Composable
 fun HomeScreen(             // the home screen of the app
@@ -230,7 +245,7 @@ fun HomeScreen(             // the home screen of the app
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("hello world")
+            SetTiles(navController, movieViewModel)
         }
     }
 
@@ -266,7 +281,7 @@ fun WatchListScreen(                        // Watchlist screen, same as homescr
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("hello world")
+            SetTiles(navController, movieViewModel, true)
         }
     }
 
@@ -275,54 +290,121 @@ fun WatchListScreen(                        // Watchlist screen, same as homescr
 
 @Composable
 fun DetailsScreen(
-    navController: NavController,
-    movieViewModel: MovieViewModel
+    navController   : NavController,
+    movieViewModel  : MovieViewModel,
+    movieIndex      : Int
 ) {
+    val movieList               =   movieViewModel.movieList
+    val currentMovie : Movie    =   movieList[movieIndex]
+    Scaffold(       // Top and bottom bar setup
+        bottomBar = { BottomBar(navController) },
+        topBar = {Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp) ,
+            horizontalArrangement = Arrangement.Center
 
+        ) {
+            Text(currentMovie.title,
+                fontSize = 36.sp)
+
+        }
+        }
+
+        //Page Content
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .padding(50.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.captain_marvel),
+                    contentDescription = "A descriptive text for the image",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                )
+                Text("Rating: ${currentMovie.rating.coerceIn(0,5)}/5")
+                Text(currentMovie.desc)
+            }
+
+            // watchlisted checkbox
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(40.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Watch Listed")
+                Checkbox(
+                    checked = currentMovie.isOnWatchList,
+                    onCheckedChange = { isChecked ->
+                        movieViewModel.updateMovie(currentMovie, movieIndex, isChecked)
+                    }
+                )
+            }
+        }
+
+
+    }
 }
 
-/**
- * A stateless composable for displaying a single row in the To-Do list.
- */
+
+
+
 @Composable
-fun TodoItemRow(
-    item: TodoItem,
-    onCheckedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+fun SetTiles(   // sets the tiles
+    navController: NavController,
+    movieViewModel: MovieViewModel,
+    watchList     : Boolean? = null
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    val movies = if (watchList == true) {
+        movieViewModel.movieList.filter { it.isOnWatchList }
+    } else
+        movieViewModel.movieList
+
+
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2), // 👈 2 columns
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Checkbox(
-            checked = item.isCompleted,
-            onCheckedChange = onCheckedChange
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = item.label,
-            fontSize = 18.sp,
-            textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-            color = if (item.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.width(0.dp))
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Delete task"
-            )
+        items(movies.size) { index ->
+            val currentMovie = movies[index]
+
+
+            OutlinedImageTile(navController, movieViewModel, currentMovie.movieID)
         }
     }
 }
 
 @Composable
-fun OutlinedImageTile() {
+fun OutlinedImageTile(
+    navController   : NavController,
+    movieViewModel  : MovieViewModel,
+    movieID           : Int
+) {
     Card(
-        modifier = Modifier.size(150.dp), // 1. Set the size of the tile
+        modifier = Modifier
+            .size(150.dp)
+            .clickable {
+                navController.navigate("movieDetails/$movieID") // pass index
+    },
+
         shape = RoundedCornerShape(16.dp), // 2. Define the shape with rounded corners
         border = BorderStroke(2.dp, Color.Gray), // 3. Add the outline here
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Optional shadow
@@ -346,7 +428,7 @@ fun OutlinedImageTilePreview() {
             .padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
-        OutlinedImageTile()
+        //OutlinedImageTile()
     }
 }
 
@@ -370,7 +452,11 @@ fun BottomBar(
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(
-            onClick = { navController.navigate("watchList") },
+            onClick = { navController.navigate("watchList") {
+                launchSingleTop = true
+                restoreState = false
+                popUpTo("watchList") { inclusive = true }       // force refresh?
+            } },
             modifier = Modifier
         ) {
             Icon(

@@ -4,7 +4,7 @@ import android.media.Image
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 
-data class Movie(val title: String, val desc: String, val rating : Int, val isOnWatchList: Boolean, val image: Image?)
+data class Movie(val title: String, val desc: String, val rating : Int, var isOnWatchList: Boolean, val image: Image?, val movieID : Int)
 
 class MovieViewModel : ViewModel() {
     val movieList = mutableStateListOf<Movie>()      // master list of all movies
@@ -21,7 +21,8 @@ class MovieViewModel : ViewModel() {
                 desc            = descs[index],
                 rating          = ratings[index],
                 isOnWatchList   = false,
-                image           = image
+                image           = image,
+                movieID         = index
             ))
         }
 
