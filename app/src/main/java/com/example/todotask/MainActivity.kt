@@ -2,7 +2,6 @@ package com.example.todotask
 
 import android.os.Bundle
 import android.os.Parcelable
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -33,6 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.todotask.ui.theme.TodoTaskTheme
 import kotlinx.parcelize.Parcelize
+import java.lang.Boolean.FALSE
+import java.lang.Boolean.TRUE
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.rememberNavController
 
 // =================================================================================
 // 1. Data Model
@@ -118,16 +123,17 @@ fun TodoScreen() {
 
     // --- Event Handlers (Unidirectional Data Flow) ---
 
-    val onAddItem = {
-        val trimmedText = text.trim()
-        if (trimmedText.isBlank()) {
-            Toast.makeText(context, "Task name cannot be empty.", Toast.LENGTH_SHORT).show()
-        } else {
-            // Generate a unique ID (simple approach for this example)
-            val newId = (items.maxOfOrNull { it.id } ?: 0) + 1
-            items.add(TodoItem(id = newId, label = trimmedText))
-            text = "" // Clear the input field
-        }
+    val movieList = {
+
+        //val trimmedText = text.trim()
+        //if (trimmedText.isBlank()) {
+        //    Toast.makeText(context, "Task name cannot be empty.", Toast.LENGTH_SHORT).show()
+        //} else {
+        //    // Generate a unique ID (simple approach for this example)
+        //    val newId = (items.maxOfOrNull { it.id } ?: 0) + 1
+        //    items.add(TodoItem(id = newId, label = trimmedText))
+        //    text = "" // Clear the input field
+        //}
     }
 
     val onItemCheckedChange: (TodoItem, Boolean) -> Unit = { item, isChecked ->
@@ -150,8 +156,8 @@ fun TodoScreen() {
     // --- UI Layout ---
 
     Column(modifier = Modifier.padding(16.dp)) {
-        MovieList(
-            title:
+        GenerateMovieRow(
+            FALSE
         )
         Spacer(modifier = Modifier.weight(1f))
         BottomBar(
@@ -160,6 +166,7 @@ fun TodoScreen() {
             back = back
         )
     }
+
 }
 
 // =================================================================================
@@ -176,7 +183,7 @@ fun TodoScreen() {
  * A stateless composable that displays a section header and a list of To-Do items.
  */
 @Composable
-fun MovieListSection(
+fun GenerateMovieList(
     title: String,
     items: List<TodoItem>,
     onItemCheckedChange: (TodoItem, Boolean) -> Unit,
@@ -187,11 +194,7 @@ fun MovieListSection(
 
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(items, key = { it.id }) { item ->
-                    TodoItemRow(
-                        item = item,
-                        onCheckedChange = { isChecked -> onItemCheckedChange(item, isChecked) },
-                        onDelete = { onItemDeleted(item) }
-                    )
+
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
             }
@@ -238,34 +241,94 @@ fun TodoItemRow(
 }
 
 @Composable
-fun OutlinedImageTile() {
-    Card(
-        modifier = Modifier.size(150.dp), // 1. Set the size of the tile
-        shape = RoundedCornerShape(16.dp), // 2. Define the shape with rounded corners
-        border = BorderStroke(2.dp, Color.Gray), // 3. Add the outline here
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Optional shadow
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.captain_marvel), // 4. Your image resource
-            contentDescription = "A descriptive text for the image", // Accessibility text
-            contentScale = ContentScale.FillHeight, // 5. Crop image to fill the card
-            modifier = Modifier.fillMaxSize() // Make image fill the whole card
-        )
+fun GenerateMovieRow(
+    //like a checkmark from todoList
+    onFavorited: Boolean?
+) {
+    var avengersEndgame = Movie(
+        title = "Avengers: Endgame",
+        description = "After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos' actions and restore balance to the universe.",
+        image = R.drawable.avengers_endgame,
+        rating = 6.7f
+    )
+    var captainMarvel = Movie(
+        "Captain Marvel",
+        "Carol Danvers becomes one of the universe's most powerful heroes when Earth is caught in the middle of a galactic war between two alien races.",
+        R.drawable.captain_marvel,
+        8.4f)
+    val myMovieList = mutableListOf<Movie>(avengersEndgame, captainMarvel)
+    val indexNum = myMovieList.indexOf(captainMarvel)
+    myMovieList[indexNum].isOnWatchlist = TRUE
+    val myFavoriteList = myMovieList.filter { it.isOnWatchlist }
+    Column(modifier = Modifier) {
+        for (i in myMovieList) {
+            OutlinedImageTile(i)
+        }
+        for (i in myMovieList) {
+            OutlinedImageTile(i)
+        }
+    }
+
+}
+
+@Composable
+fun OutlinedImageTile(movieItem: Movie) {
+    Column(modifier = Modifier) {
+        Card(
+            modifier = Modifier, // 1. Set the size of the tile
+            border = BorderStroke(2.dp, Color.Gray), // 3. Add the outline here
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Optional shadow
+        ) {
+            Card(
+                modifier = Modifier.size(140.dp), // 1. Set the size of the tile
+            ) {
+                Image(
+                    painter = painterResource(id = movieItem.image), // 4. Your image resource
+                    contentDescription = "A descriptive text for the image", // Accessibility text
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(130.dp),
+                    contentScale = ContentScale.Crop, // 5. Crop image to fill the card
+                )
+            }
+
+            Text(
+                text = "Rating: ${movieItem.rating}",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Text(
+                text = movieItem.title
+            )
+        }
+    }
+}
+@Composable
+fun BottomBar2()
+{
+    val navController = rememberNavController()
+    Scaffold(bottomBar = { TabView(tabBarItems, navController) })
+    {
+        NavHost(navController = navController, startDestination = homeTab.title) {
+            composable(homeTab.title) {
+                Text(homeTab.title)
+            }
+            composable(alertsTab.title) {
+                Text(alertsTab.title)
+            }
+            composable(settingsTab.title) {
+                Text(settingsTab.title)
+            }
+            composable(moreTab.title) {
+                MoreView()
+            }
+        }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun OutlinedImageTilePreview() {
-    // We use a Box to center the tile for the preview
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        OutlinedImageTile()
-    }
+fun TabView(x0: tabBarItems, x1: NavHostController) {
+    TODO("Not yet implemented")
 }
 
 @Composable
