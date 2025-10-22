@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -205,20 +206,32 @@ fun HomeScreen(             // the home screen of the app
     movieViewModel: MovieViewModel,
 ) {
 
-    BottomBar(navController)    // creates the navigation bar bar
+    Scaffold(       // Top and bottom bar setup
+        bottomBar = { BottomBar(navController) },
+        topBar = {Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp) ,
+            horizontalArrangement = Arrangement.Center
 
+        ) {
+            Text("Home",
+                fontSize = 36.sp)
 
-    // content
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("you are on the home screen")
+        }
+        }
 
-
+        //Page Content
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("hello world")
+        }
     }
 
 }
@@ -229,21 +242,34 @@ fun WatchListScreen(                        // Watchlist screen, same as homescr
     movieViewModel: MovieViewModel
 ) {
 
-    BottomBar(navController)    // creates the navigation bar bar
+    Scaffold(       // Top and bottom bar setup
+        bottomBar = { BottomBar(navController) },
+        topBar = {Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp) ,
+            horizontalArrangement = Arrangement.Center
 
+        ) {
+            Text("Watch List",
+                fontSize = 36.sp)
 
-    // content
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("you are on the watchlist screen")
+        }
+        }
 
-
+        //Page Content
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("hello world")
+        }
     }
+
 
 }
 
@@ -328,6 +354,8 @@ fun OutlinedImageTilePreview() {
 fun BottomBar(
     navController: NavController
 ) {
+    val currentBackStackEntry = navController.currentBackStackEntry
+    val currentRoute = currentBackStackEntry?.destination?.route
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -351,7 +379,10 @@ fun BottomBar(
             )
         }
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = { navController.popBackStack() }) {        // go back 1 page in the stack
+        IconButton(onClick = {
+            if (currentRoute != "home") {
+                navController.popBackStack() // go back 1 page in the stack if not yet at home
+            } }) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Go Back"
