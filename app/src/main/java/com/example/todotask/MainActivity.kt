@@ -67,6 +67,18 @@ data class TodoItem(
 // =================================================================================
 // 2. Main Activity
 // =================================================================================
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            TodoTaskTheme {
+                MovieApp()
+            }
+        }
+    }
+}
+
 @Composable
 fun MovieApp() {
     val navController = rememberNavController()
