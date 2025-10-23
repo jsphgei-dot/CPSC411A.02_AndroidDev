@@ -45,8 +45,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.style.TextAlign
 
 import com.example.todotask.ui.theme.TodoTaskTheme
+import kotlinx.coroutines.android.awaitFrame
 import kotlinx.parcelize.Parcelize
 
 
@@ -326,7 +329,7 @@ fun DetailsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.captain_marvel),
+                    painter = painterResource(id = movieViewModel.movieList[movieIndex].image),
                     contentDescription = "A descriptive text for the image",
                     contentScale = ContentScale.FillHeight,
                     modifier = Modifier
@@ -334,7 +337,10 @@ fun DetailsScreen(
                         .height(300.dp)
                 )
                 Text("Rating: ${currentMovie.rating.coerceIn(0,5)}/5")
-                Text(currentMovie.desc)
+                Text("Description: ${currentMovie.desc}",
+                fontSize = 20.sp,
+                textAlign = TextAlign.Left
+                )
             }
 
             // watchlisted checkbox
@@ -385,8 +391,6 @@ fun SetTiles(   // sets the tiles
     ) {
         items(movies.size) { index ->
             val currentMovie = movies[index]
-
-
             OutlinedImageTile(navController, movieViewModel, currentMovie.movieID)
         }
     }
@@ -400,20 +404,30 @@ fun OutlinedImageTile(
 ) {
     Card(
         modifier = Modifier
-            .size(150.dp)
             .clickable {
                 navController.navigate("movieDetails/$movieID") // pass index
     },
-
-        shape = RoundedCornerShape(16.dp), // 2. Define the shape with rounded corners
         border = BorderStroke(2.dp, Color.Gray), // 3. Add the outline here
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Optional shadow
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.captain_marvel), // 4. Your image resource
-            contentDescription = "A descriptive text for the image", // Accessibility text
-            contentScale = ContentScale.FillHeight, // 5. Crop image to fill the card
-            modifier = Modifier.fillMaxSize() // Make image fill the whole card
+        Card(
+            modifier = Modifier.size(140.dp), // 1. Set the size of the tile
+        ) {
+            var myImage: Int = movieViewModel.movieList[movieID].image
+            Image(
+                painter = painterResource(id = myImage), // 4. Your image resource
+                contentDescription = "A descriptive text for the image", // Accessibility text
+                modifier = Modifier.size(140.dp), // 2. Set the size of the image
+                contentScale = ContentScale.FillBounds
+            )
+        }
+        Text(
+            text = "Rating: ${movieViewModel.movieList[movieID].rating}",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Text(
+            text = movieViewModel.movieList[movieID].title
         )
     }
 }
@@ -444,7 +458,12 @@ fun BottomBar(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { navController.popBackStack("home", inclusive = false) }) { // use pop backstack since home is the start page
+        IconButton(onClick = {navController.navigate("home") {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo("mainFlow") { inclusive = false }
+        }   }
+        ) {
             Icon(
                 imageVector = Icons.Default.Home,
                 contentDescription = "Go Home"
@@ -454,8 +473,8 @@ fun BottomBar(
         IconButton(
             onClick = { navController.navigate("watchList") {
                 launchSingleTop = true
-                restoreState = false
-                popUpTo("watchList") { inclusive = true }       // force refresh?
+                restoreState = true
+                popUpTo("mainFlow") { inclusive = false }
             } },
             modifier = Modifier
         ) {
@@ -466,9 +485,19 @@ fun BottomBar(
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(onClick = {
-            if (currentRoute != "home") {
-                navController.popBackStack() // go back 1 page in the stack if not yet at home
-            } }) {
+            if (currentRoute == "home") {
+            } else if(currentRoute == "watchList") {
+                navController.navigate("home") {
+                    launchSingleTop = true
+                    restoreState = true
+                    popUpTo("mainFlow") { inclusive = false }
+                }
+            }
+            else {
+                if (navController.previousBackStackEntry != null) {
+                    navController.popBackStack()
+                }
+            }}) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Go Back"
