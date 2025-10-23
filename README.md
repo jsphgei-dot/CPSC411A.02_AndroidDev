@@ -6,4 +6,4 @@ Repo to track progress on the midterm project
 <img src="screenshots/screenshot_1.jpg" alt="Project Sketch" width=400 height=800>
 
 ## Video
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/NGWZrCq05JQ/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/NGWZrCq05JQ/0.jpg)](https://www.youtube.com/watch?v=NGWZrCq05JQ)
