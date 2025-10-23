@@ -1,4 +1,6 @@
 # CPSC411A.02_AndroidDev - Midterm Project: Movie Viewer
+Chris Nguyen clocngyn@csu.fullerton.edu 884778994
+
 Repo to track progress on the midterm project
 
 
