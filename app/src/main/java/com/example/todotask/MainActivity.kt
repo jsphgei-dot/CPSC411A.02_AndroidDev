@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,215 +37,39 @@ import java.lang.Boolean.FALSE
 import java.lang.Boolean.TRUE
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.todotask.Routes.myFavoriteList
+import com.example.todotask.Routes.myMovieList
 
 // =================================================================================
 // 1. Data Model
 // =================================================================================
+data class Movie(
+    var title: String,
+    var description: String,
+    var image: Int,
+    var rating: Float,
+    var isOnWatchlist: Boolean = FALSE
+)
+object Routes {
+    const val HOME = "home"
+    const val WATCHLIST = "watchlist"
+    const val MOVIE_DETAILS = "movie_details/{movieId}"
 
-/**
- * Represents a single To-Do item.
- * @param id A unique identifier for the item.
- * @param label The text content of the task.
- * @param isCompleted Whether the task is marked as complete.
- *
- * It's Parcelable to be easily saved and restored by `rememberSaveable`.
- */
-@Parcelize
-data class TodoItem(
-    val id: Int,
-    val label: String,
-    val isCompleted: Boolean = false
-) : Parcelable
+    fun movie_details(movieId: String) = "movie_details/$movieId"
 
-
-// =================================================================================
-// 2. Main Activity
-// =================================================================================
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            TodoTaskTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    TodoScreen()
-                }
-            }
-        }
-    }
-}
-
-// =================================================================================
-// 3. Stateful Parent Composable (View Logic)
-// =================================================================================
-@Composable
-fun TodoScreen() {
-    // Context for showing Toast messages
-    val context = LocalContext.current
-
-    // State for the text in the input field.
-    // `rememberSaveable` ensures it survives configuration changes (e.g., rotation).
-    var text by rememberSaveable { mutableStateOf("") }
-
-    // State for the list of all To-Do items.
-    // `rememberSaveable` with a custom `listSaver` is used to persist our custom TodoItem list.
-    val items = rememberSaveable(
-        saver = listSaver(
-            save = { stateList ->
-                // Don't save if it's not a mutable state list
-                if (stateList.isNotEmpty()) {
-                    val list = stateList.toList()
-                    // Convert each item to a list of its properties
-                    list.map { listOf(it.id, it.label, it.isCompleted) }
-                } else {
-                    emptyList()
-                }
-            },
-            restore = { list ->
-                // Restore the list from the saved properties
-                list.map {
-                    TodoItem(
-                        id = it[0] as Int,
-                        label = it[1] as String,
-                        isCompleted = it[2] as Boolean
-                    )
-                }.toMutableStateList()
-            }
-        )
-    ) {
-        // Initial list is empty
-        mutableStateListOf<TodoItem>()
-    }
-
-
-    // --- Event Handlers (Unidirectional Data Flow) ---
-
-    val movieList = {
-
-        //val trimmedText = text.trim()
-        //if (trimmedText.isBlank()) {
-        //    Toast.makeText(context, "Task name cannot be empty.", Toast.LENGTH_SHORT).show()
-        //} else {
-        //    // Generate a unique ID (simple approach for this example)
-        //    val newId = (items.maxOfOrNull { it.id } ?: 0) + 1
-        //    items.add(TodoItem(id = newId, label = trimmedText))
-        //    text = "" // Clear the input field
-        //}
-    }
-
-    val onItemCheckedChange: (TodoItem, Boolean) -> Unit = { item, isChecked ->
-        val index = items.indexOf(item)
-        if (index != -1) {
-            items[index] = item.copy(isCompleted = isChecked)
-        }
-    }
-
-    val onItemDeleted: (TodoItem) -> Unit = { item ->
-        items.remove(item)
-    }
-
-    val toHome: () -> Unit = {}
-
-    val toWatchlist: () -> Unit = {}
-
-    val back: () -> Unit = {}
-
-    // --- UI Layout ---
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        GenerateMovieRow(
-            FALSE
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        BottomBar(
-            toHome = toHome,
-            toWatchlist = toWatchlist,
-            back = back
-        )
-    }
-
-}
-
-// =================================================================================
-// 4. Stateless Child Composables (UI Components)
-// =================================================================================
-
-/**
- * A stateless composable for the text input and "Add" button.
- * State is hoisted to the parent (`TodoScreen`).
- */
-
-
-/**
- * A stateless composable that displays a section header and a list of To-Do items.
- */
-@Composable
-fun GenerateMovieList(
-    title: String,
-    items: List<TodoItem>,
-    onItemCheckedChange: (TodoItem, Boolean) -> Unit,
-    onItemDeleted: (TodoItem) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(items, key = { it.id }) { item ->
-
-                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-                }
-            }
-
-    }
-}
-
-/**
- * A stateless composable for displaying a single row in the To-Do list.
- */
-@Composable
-fun TodoItemRow(
-    item: TodoItem,
-    onCheckedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = item.isCompleted,
-            onCheckedChange = onCheckedChange
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = item.label,
-            fontSize = 18.sp,
-            textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-            color = if (item.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.width(0.dp))
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Delete task"
-            )
-        }
-    }
-}
-
-@Composable
-fun GenerateMovieRow(
-    //like a checkmark from todoList
-    onFavorited: Boolean?
-) {
     var avengersEndgame = Movie(
         title = "Avengers: Endgame",
         description = "After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos' actions and restore balance to the universe.",
@@ -257,25 +82,202 @@ fun GenerateMovieRow(
         R.drawable.captain_marvel,
         8.4f)
     val myMovieList = mutableListOf<Movie>(avengersEndgame, captainMarvel)
-    val indexNum = myMovieList.indexOf(captainMarvel)
-    myMovieList[indexNum].isOnWatchlist = TRUE
     val myFavoriteList = myMovieList.filter { it.isOnWatchlist }
-    Column(modifier = Modifier) {
-        for (i in myMovieList) {
-            OutlinedImageTile(i)
-        }
-        for (i in myMovieList) {
-            OutlinedImageTile(i)
+}
+fun getMovie(id: String) = myMovieList.find {it.title == id}
+fun getFavorite(id: String) = Routes.myFavoriteList.find {it.title == id}
+// =================================================================================
+// 2. Main Activity
+// =================================================================================
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+        setContent {
+            TodoTaskTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MovieApp()
+                }
+            }
         }
     }
+}
+@Composable
+fun MovieApp() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        Routes.HOME
+    ) {
+        //home
+        composable(Routes.HOME) {
+            HomeScreen(navController)
+        }
+
+        //watchlist page
+        composable(Routes.WATCHLIST,
+            listOf(navArgument(
+                "movieId"
+            ) {type = NavType.StringType}) )
+        {
+            Watchlist(navController)
+        }
+    }
+}
+
+@Composable
+fun MovieDetails(id: String, navController: NavHostController) {
+
+}
+
+// Home Screen
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = {
+                    Text("Home Screen")
+                }
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.HOME) }) {
+                        Icon(Icons.Default.Home, contentDescription = "Localized description")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.navigate(Routes.WATCHLIST) }) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            LazyColumn(modifier = Modifier) {
+                items(myMovieList) { movie ->
+                    OutlinedImageTile(
+                        movieItem = movie,
+                        modifier = Modifier.padding(8.dp),
+                        navController
+                    )
+                }
+            }
+        }
+    }
+    //////////////////////////////////////////////////////////////
+    //Column (modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    //    Text("Home Screen")
+    //    Spacer(modifier = Modifier.height(8.dp))
+//
+    //    courses.forEach {
+    //            course ->
+    //        Card (modifier = Modifier.fillMaxWidth().clickable {
+    //            navController.navigate()
+    //        }) {
+    //            Text(course.name)
+    //            Spacer(Modifier.height(8.dp))
+    //        }
+    //    }
+//
+    //}
+
+}
+
+// Home Screen
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Watchlist(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = {
+                    Text("Home Screen")
+                }
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.HOME) }) {
+                        Icon(Icons.Default.Home, contentDescription = "Localized description")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.navigate(Routes.WATCHLIST) }) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            LazyColumn(modifier = Modifier) {
+                items(myFavoriteList) { movie ->
+                    OutlinedImageTile(
+                        movieItem = movie,
+                        modifier = Modifier.padding(8.dp),
+                        navController = navController
+                    )
+                }
+            }
+        }
+    }
+}
+@Composable
+fun FavoriteList(favoriteList: List<Movie>, modifier: Modifier = Modifier, navController: NavController) {
 
 }
 
 @Composable
-fun OutlinedImageTile(movieItem: Movie) {
+fun OutlinedImageTile(movieItem: Movie, modifier: Modifier = Modifier, navController: NavController) {
     Column(modifier = Modifier) {
         Card(
-            modifier = Modifier, // 1. Set the size of the tile
+            modifier = Modifier.clickable {
+                navController.navigate("movie_details/${movieItem.title}")
+            }, // 1. Set the size of the tile
             border = BorderStroke(2.dp, Color.Gray), // 3. Add the outline here
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Optional shadow
         ) {
@@ -291,7 +293,6 @@ fun OutlinedImageTile(movieItem: Movie) {
                     contentScale = ContentScale.Crop, // 5. Crop image to fill the card
                 )
             }
-
             Text(
                 text = "Rating: ${movieItem.rating}",
                 modifier = Modifier.padding(16.dp),
@@ -303,79 +304,213 @@ fun OutlinedImageTile(movieItem: Movie) {
         }
     }
 }
+
 @Composable
-fun BottomBar2()
-{
+fun BottomAppBarExample(navController: NavController) {
+    Scaffold(
+        bottomBar = {
+            BottomAppBar(
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.HOME) }) {
+                        Icon(Icons.Default.Home, contentDescription = "Localized description")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.navigate(Routes.WATCHLIST) }) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Localized description",
+                        )
+                    }
+                }
+            )
+        },
+    ) { innerPadding ->
+        Text(
+            modifier = Modifier.padding(innerPadding),
+            text = "Example of a scaffold with a bottom app bar."
+        )
+    }
+}
+//////////////////////////////////////////////////////////////////////
+/*
+@Composable
+fun CourseApp() {
     val navController = rememberNavController()
-    Scaffold(bottomBar = { TabView(tabBarItems, navController) })
-    {
-        NavHost(navController = navController, startDestination = homeTab.title) {
-            composable(homeTab.title) {
-                Text(homeTab.title)
-            }
-            composable(alertsTab.title) {
-                Text(alertsTab.title)
-            }
-            composable(settingsTab.title) {
-                Text(settingsTab.title)
-            }
-            composable(moreTab.title) {
-                MoreView()
-            }
-        }
-    }
-}
 
-@Composable
-fun TabView(x0: tabBarItems, x1: NavHostController) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun BottomBar(
-    toHome: () -> Unit,
-    toWatchlist: () -> Unit,
-    back: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    NavHost(
+        navController = navController,
+        Routes.HOME
     ) {
-        IconButton(onClick = toHome) {
-            Icon(
-                imageVector = Icons.Default.Home,
-                contentDescription = "Go Home"
-            )
+        //home
+        composable(Routes.HOME) {
+            HomeScreen(navController)
         }
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(
-            onClick = toWatchlist,
-            modifier = Modifier
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Go To Watchlist"
-            )
+
+        //course details
+        composable(Routes.COURSE,
+            listOf(navArgument(
+                "courseId"
+            ) {type = NavType.StringType}) )
+        {
+
+                backStackEntry ->
+            val id = backStackEntry.arguments?.getString("courseId") ?: ""
+
+            CourseScreen(id, navController)
+
+
         }
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = back) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Go Back"
-            )
+
+        //lessons screen
+        composable(Routes.LESSON,
+            listOf(
+                navArgument("courseId") {type = NavType.StringType},
+                navArgument("lessonId") {type = NavType.IntType}
+            ) )
+        { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("courseId") ?: ""
+            val lessonId = backStackEntry.arguments?.getInt("lessonId") ?: 0
+            LessonScreen(id, lessonId, navController)
+
+
         }
+
+
     }
 }
 
-// =================================================================================
-// 5. Preview
-// =================================================================================
-@Preview(showBackground = true)
+
+
+// Course Details Screen
 @Composable
-fun TodoScreenPreview() {
-    TodoTaskTheme {
-        TodoScreen()
+fun CourseScreen(courseId: String, navController: NavController) {
+    // fetch the data
+    val course = getCourse(courseId)
+
+    if(course == null) {
+        Text("Course is not found")
+        return
     }
+
+    Column (modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text(course.name)
+        Spacer(Modifier.height(8.dp))
+
+        Text("Lessons:")
+        Spacer(Modifier.height(8.dp))
+
+        course.lessons.forEachIndexed {
+                index, lesson ->
+            Card (
+                modifier = Modifier.fillMaxWidth().clickable {
+                    navController.navigate((Routes.lesson(courseId, index)))
+                }
+            ) {
+                Text("Lesson ${index + 1}:")
+                Spacer(Modifier.height(8.dp))
+
+            }
+        }
+
+
+
+    }
+
 }
+
+// Lessons Screen
+@Composable
+fun LessonScreen(courseId: String, lessonId: Int, navController: NavController) {
+    // fetch the data
+    val course = getCourse(courseId)
+
+    if(course  == null) {
+        Text("Lesson not found")
+        return
+    }
+
+    val lesson = course.lessons[lessonId]
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        IconButton({navController.popBackStack()}) {
+            Icon(Icons.Default.ArrowBack, "Back")
+        }
+
+        Text("Lesson ${lessonId + 1}:")
+        Spacer(Modifier.height(8.dp))
+
+        Text(lesson)
+        Spacer(Modifier.height(8.dp))
+
+        Row (modifier = Modifier.fillMaxWidth()) {
+
+            if(lessonId > 0) {
+                Button({
+                    navController.navigate(Routes.lesson(courseId, lessonId - 1)) {
+                        popUpTo(Routes.lesson(courseId, lessonId)) {inclusive = true}
+                    }
+                }) {
+                    Text("Previous")
+                }
+            }
+
+            if(lessonId < course.lessons.size - 1) {
+                Button({
+                    navController.navigate(Routes.lesson(courseId, lessonId + 1)){
+                        popUpTo(Routes.lesson(courseId, lessonId)) {inclusive = true}
+                    }
+                }) {
+                    Text("Next")
+                }
+            }
+
+
+        }
+    }
+
+
+
+
+}
+
+data class Course(
+    val id: String,
+    val name: String,
+    val lessons: List<String>
+)
+
+val courses = listOf(
+    Course("java", "Java Basics",
+        listOf("Variables", "Functions", "Data types", "Classes", "Inheritance")
+    ),
+    Course("kotlin", "Kotlin Basics",
+        listOf("Variables", "Functions", "Data types", "Classes", "Inheritance")
+    )
+
+)
+
+
+fun getCourse(id: String) = courses.find {it.id == id}
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
