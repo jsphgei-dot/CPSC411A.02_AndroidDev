@@ -10,4 +10,5 @@ Oscar De La Torre
 <img src="screenshots/Screenshot_3.png" alt="Project Sketch" width=400 height=800>
 
 ## Video
+URL: https://www.youtube.com/watch?v=NGWZrCq05JQ
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/NGWZrCq05JQ/0.jpg)](https://www.youtube.com/watch?v=NGWZrCq05JQ)
