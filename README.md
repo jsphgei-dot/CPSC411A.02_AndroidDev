@@ -2,7 +2,7 @@
 ##Credit:
 Joseph Geiger josgeig@csu.fullerton.edu 884972886\
 Chris Nguyen clocngyn@csu.fullerton.edu 884778994\
-Oscar De La Torre
+Oscar De La Torre oscar_delatorrejr@csu.fullerton.edu 886859594
 
 ## Screenshots
 <img src="screenshots/Screenshot_1.png" alt="Project Sketch" width=400 height=800>
