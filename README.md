@@ -1,8 +1,8 @@
 # CPSC411A.02_AndroidDev - Midterm Project: Movie Viewer
 Credit:
-Joseph Geiger josgeig@csu.fullerton.edu 884972886
-Chris Nguyen clocngyn@csu.fullerton.edu 884778994
-Oscar De La Torre
+Joseph Geiger josgeig@csu.fullerton.edu 884972886\
+Chris Nguyen clocngyn@csu.fullerton.edu 884778994\
+Oscar De La Torre\
 
 ## Screenshots
 <img src="screenshots/Screenshot_1.png" alt="Project Sketch" width=400 height=800>
